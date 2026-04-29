@@ -1,7 +1,13 @@
 import { ethers } from "ethers";
 
 export function provider() {
-  return new ethers.JsonRpcProvider(process.env.POLYGON_RPC_URL);
+  const rpcUrl =
+    process.env.CHAIN_RPC_URL ||
+    process.env.SEPOLIA_RPC ||
+    process.env.POLYGON_RPC_URL;
+  return new ethers.JsonRpcProvider(rpcUrl, undefined, {
+    staticNetwork: ethers.Network.from(11155111),
+  });
 }
 
 export function oracleWallet() {

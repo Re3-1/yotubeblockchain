@@ -5,9 +5,12 @@ import Marketplace from "./pages/Marketplace.jsx";
 import FanDashboard from "./pages/FanDashboard.jsx";
 import Milestones from "./pages/Milestones.jsx";
 import { useWallet } from "./context/WalletContext.jsx";
+import { useAuth } from "./context/AuthContext.jsx";
 
 export default function App() {
   const { account, connect } = useWallet();
+  const { creatorLoggedIn, fanLoggedIn, loggedIn, loginFan, logoutAll } = useAuth();
+
   return (
     <div className="min-h-screen">
       <nav className="bg-brand text-white px-6 py-4 flex gap-6 items-center">
@@ -16,10 +19,21 @@ export default function App() {
         <Link to="/dashboard">Creator</Link>
         <Link to="/fan">Fan</Link>
         <Link to="/milestones">Milestones</Link>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-3">
+          {!fanLoggedIn && (
+            <button onClick={loginFan} className="bg-white/20 px-3 py-1 rounded">
+              Fan Login
+            </button>
+          )}
+          {loggedIn && (
+            <button onClick={logoutAll} className="bg-white/20 px-3 py-1 rounded">
+              Logout
+            </button>
+          )}
           {account ? (
             <span className="bg-white/20 px-3 py-1 rounded">
-              {account.slice(0, 6)}…{account.slice(-4)}
+              {creatorLoggedIn ? "Creator" : fanLoggedIn ? "Fan" : "Wallet"}{" "}
+              {account.slice(0, 6)}...{account.slice(-4)}
             </span>
           ) : (
             <button

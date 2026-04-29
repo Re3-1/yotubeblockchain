@@ -25,9 +25,10 @@ export class PlatformAdapter {
   /**
    * Channels owned by the currently-authenticated user.
    * @param {string} accessToken — OAuth access token
+   * @param {string} refreshToken OAuth refresh token, when available
    * @returns {Promise<object[]>}
    */
-  async listMyChannels(_accessToken) {
+  async listMyChannels(_accessToken, _refreshToken) {
     throw new Error("listMyChannels not implemented");
   }
 

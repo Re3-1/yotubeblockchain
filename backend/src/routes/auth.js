@@ -2,16 +2,16 @@ import { Router } from "express";
 import passport from "passport";
 import { issueJwt, requireAuth } from "../middleware/auth.js";
 
+import { GOOGLE_SCOPES } from "../services/passport.js";
 const router = Router();
 
 router.get(
   "/google",
   passport.authenticate("google", {
-    scope: [
-      "profile",
-      "email",
-      "https://www.googleapis.com/auth/youtube.readonly",
-    ],
+    scope: GOOGLE_SCOPES,
+accessType: "offline",
+prompt: "consent",
+includeGrantedScopes: true,
   })
 );
 

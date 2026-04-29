@@ -189,7 +189,7 @@ contract MilestoneChallenge is Ownable, ReentrancyGuard {
 
         require(c.resolved,                  "not resolved yet");
         require(pred != Outcome.Pending,     "you didn't predict");
-        require(pred == c.outcome,           "your prediction was wrong");
+        require(pred == c.outcome,           "wrong prediction");
         require(!claimed[id][msg.sender],    "already claimed");
 
         // Mark first so a re-entrant attacker can't claim twice.

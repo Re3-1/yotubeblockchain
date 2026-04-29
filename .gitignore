@@ -7,5 +7,7 @@ coverage/
 artifacts/
 cache/
 typechain-types/
+.hardhat-appdata/
+.hardhat-localappdata/
 .DS_Store
 *.log

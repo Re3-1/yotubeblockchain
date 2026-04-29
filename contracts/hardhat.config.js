@@ -1,30 +1,39 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("dotenv").config();
 
-const {
-  POLYGON_MUMBAI_RPC = "https://rpc-mumbai.maticvigil.com",
-  DEPLOYER_PRIVATE_KEY,
-  POLYGONSCAN_API_KEY,
-} = process.env;
+const SEPOLIA_RPC = process.env.SEPOLIA_RPC || "https://eth-sepolia.public.blastapi.io";
+const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
+const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
 
-/** @type import('hardhat/config').HardhatUserConfig */
+let accounts = [];
+if (DEPLOYER_PRIVATE_KEY) {
+  accounts = [DEPLOYER_PRIVATE_KEY];
+}
+
 module.exports = {
   solidity: {
     version: "0.8.24",
     settings: {
       optimizer: { enabled: true, runs: 200 },
+      evmVersion: "cancun",
     },
   },
   networks: {
-    hardhat: {},
-    localhost: { url: "http://127.0.0.1:8545" },
-    mumbai: {
-      url: POLYGON_MUMBAI_RPC,
-      accounts: DEPLOYER_PRIVATE_KEY ? [DEPLOYER_PRIVATE_KEY] : [],
-      chainId: 80001,
+    hardhat: {
+      hardfork: "cancun",
+    },
+    localhost: {
+      url: "http://127.0.0.1:8545",
+    },
+    sepolia: {
+      url: SEPOLIA_RPC,
+      accounts: accounts,
+      chainId: 11155111,
     },
   },
   etherscan: {
-    apiKey: { polygonMumbai: POLYGONSCAN_API_KEY || "" },
+    apiKey: {
+      sepolia: ETHERSCAN_API_KEY || "",
+    },
   },
 };

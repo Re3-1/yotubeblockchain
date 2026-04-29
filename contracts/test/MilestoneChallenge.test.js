@@ -48,7 +48,7 @@ describe("MilestoneChallenge", () => {
     await ms.connect(creator).createChallenge(
       "UC_abc", "subs", 100, deadline, "ipfs://b"
     );
-    await expect(ms.connect(oracle).resolve(1, 200)).to.be.revertedWith("early");
+    await expect(ms.connect(oracle).resolve(1, 200)).to.be.revertedWith("too early");
   });
 
   it("non-oracle cannot resolve", async () => {

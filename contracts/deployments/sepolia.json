@@ -1,0 +1,39 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployer": "0x9711CdAC832455b2Bb4a15259bB649A3664b4dfe",
+  "ChannelBadgeNFT": "0xc90389A509Af6406d73b3D827a69e1fC6A1C327D",
+  "Marketplace": "0x5794d93292C9cbe73391Dd30C1e9e38362EA4bB3",
+  "MilestoneChallenge": "0x836Fb9d6D4726ED110Ba30cc3D625B6272Ea255C",
+  "MilestoneOracle": "0x7d393F580a099fE557Ed30F6c5db5349e1044D80",
+  "MilestoneOracleSetTx": "0x156c8dec8799b384fd0a0fd81e2b70402ee419a2b166c17c8b40494aae2a1351",
+  "SampleChannelToken": "0x27a57375BeeaB7A360A85658998950c43B580Cff",
+  "ChannelTokens": {
+    "UCP7C5EMX6bEyikran5tvlKQ": {
+      "address": "0xFdF434796Da416Db9CEbD50f0CE32e998dB2Cd53",
+      "name": "notbenten Channel Token",
+      "symbol": "NBT",
+      "creator": "0x9711cdac832455b2bb4a15259bb649a3664b4dfe",
+      "cap": "1000000",
+      "initialSupply": "10000"
+    }
+  },
+  "MarketplaceListings": {
+    "1": {
+      "channelId": "UCP7C5EMX6bEyikran5tvlKQ",
+      "token": "0xFdF434796Da416Db9CEbD50f0CE32e998dB2Cd53",
+      "seller": "0x9711CdAC832455b2Bb4a15259bB649A3664b4dfe",
+      "amount": "100",
+      "priceEth": "0.001",
+      "txHash": "0x1acd33c89326fc60839fe678369444317bd528e2bd7aa9526727a6e6f3d4ca2e"
+    },
+    "2": {
+      "channelId": "UCP7C5EMX6bEyikran5tvlKQ",
+      "token": "0xFdF434796Da416Db9CEbD50f0CE32e998dB2Cd53",
+      "seller": "0x9711CdAC832455b2Bb4a15259bB649A3664b4dfe",
+      "amount": "1",
+      "priceEth": "0.002",
+      "txHash": "0x624ea48ed8205afdc590e32f256cd563a27df87f29596cd4254402b83019712c"
+    }
+  }
+}

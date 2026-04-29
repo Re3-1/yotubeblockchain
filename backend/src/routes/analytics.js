@@ -13,7 +13,7 @@ router.get("/price-history", async (req, res) => {
 
   const since = new Date(Date.now() - Number(days) * 86400_000);
   const rows = await Trade.find({
-    tokenContract: token,
+    tokenContract: String(token).toLowerCase(),
     createdAt: { $gte: since },
   }).sort({ createdAt: 1 });
 
@@ -40,10 +40,11 @@ router.get("/price-history", async (req, res) => {
  * GET /analytics/volume/:token — total tokens traded + total MATIC wei.
  */
 router.get("/volume/:token", async (req, res) => {
-  const rows = await Trade.find({ tokenContract: req.params.token });
+  const token = req.params.token.toLowerCase();
+  const rows = await Trade.find({ tokenContract: token });
   const tokens = rows.reduce((s, r) => s + Number(r.amount) / 1e18, 0);
   const wei = rows.reduce((s, r) => s + BigInt(r.total || "0"), 0n);
-  res.json({ token: req.params.token, trades: rows.length, tokens, totalWei: wei.toString() });
+  res.json({ token, trades: rows.length, tokens, totalWei: wei.toString() });
 });
 
 export default router;

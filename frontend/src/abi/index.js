@@ -4,8 +4,11 @@ export const ChannelTokenABI = [
   "function name() view returns (string)",
   "function symbol() view returns (string)",
   "function decimals() view returns (uint8)",
+  "function channelId() view returns (string)",
+  "function owner() view returns (address)",
   "function totalSupply() view returns (uint256)",
   "function balanceOf(address) view returns (uint256)",
+  "function allowance(address,address) view returns (uint256)",
   "function approve(address,uint256) returns (bool)",
   "function mint(address,uint256)",
 ];
@@ -27,6 +30,10 @@ export const MilestoneABI = [
   "function join(uint256 id,uint8 prediction)",
   "function claimBadge(uint256 id)",
   "function challenges(uint256) view returns (address creator,string channelId,string metric,uint256 target,uint64 deadline,uint8 outcome,string badgeUri,bool resolved)",
+  "event ChallengeCreated(uint256 indexed id,address indexed creator,string channelId,string metric,uint256 target,uint64 deadline)",
+  "event Joined(uint256 indexed id,address indexed user,uint8 prediction)",
+  "event Resolved(uint256 indexed id,uint8 outcome,uint256 actual)",
+  "event BadgeClaimed(uint256 indexed id,address indexed user,uint256 badgeId)",
 ];
 
 export const BadgeABI = [

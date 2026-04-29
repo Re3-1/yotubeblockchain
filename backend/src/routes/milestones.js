@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { isAddress } from "ethers";
 import { Milestone } from "../models/Milestone.js";
 
 const router = Router();
@@ -6,7 +7,36 @@ const router = Router();
 /** Mirror an on-chain challenge creation into Mongo (UI analytics). */
 router.post("/", async (req, res) => {
   try {
-    const m = await Milestone.create(req.body);
+    const {
+      challengeId,
+      creator,
+      channelId,
+      metric,
+      target,
+      deadline,
+      badgeUri,
+    } = req.body;
+
+    if (!isAddress(creator)) {
+      return res.status(400).json({ error: "invalid creator address" });
+    }
+    if (!["subscribers", "views", "videos"].includes(metric)) {
+      return res.status(400).json({ error: "invalid metric" });
+    }
+
+    const m = await Milestone.findOneAndUpdate(
+      { challengeId: Number(challengeId) },
+      {
+        challengeId: Number(challengeId),
+        creator: creator.toLowerCase(),
+        channelId,
+        metric,
+        target: Number(target),
+        deadline: new Date(deadline),
+        badgeUri,
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
     res.json(m);
   } catch (e) {
     res.status(400).json({ error: String(e) });

@@ -3,18 +3,73 @@ import NodeCache from "node-cache";
 
 const metricsCache = new NodeCache({ stdTTL: 15 * 60 }); // 15 min
 
+export class YouTubeAuthError extends Error {
+  constructor(message = "re-auth with YouTube scope") {
+    super(message);
+    this.name = "YouTubeAuthError";
+    this.code = "YOUTUBE_REAUTH_REQUIRED";
+    this.status = 401;
+  }
+}
+
+function createOAuthClient() {
+  return new google.auth.OAuth2({
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    redirectUri: process.env.GOOGLE_CALLBACK_URL,
+    forceRefreshOnFailure: true,
+  });
+}
+
+function isGoogleAuthError(error) {
+  return (
+    error instanceof YouTubeAuthError ||
+    error?.status === 401 ||
+    error?.code === 401 ||
+    error?.response?.status === 401 ||
+    error?.response?.data?.error === "invalid_grant" ||
+    error?.errors?.some((item) => item.reason === "authError") ||
+    error?.message === "No refresh token is set."
+  );
+}
+
+async function refreshAccessToken(auth, onTokens) {
+  try {
+    const { credentials } = await auth.refreshAccessToken();
+    if (credentials?.access_token) await onTokens?.(credentials);
+  } catch (error) {
+    if (isGoogleAuthError(error)) throw new YouTubeAuthError();
+    throw error;
+  }
+}
+
 /**
  * Returns the channels owned by the currently-signed-in Google account.
  * Uses the OAuth access token so mine=true works.
  */
-export async function listMyChannels(accessToken) {
-  const auth = new google.auth.OAuth2();
-  auth.setCredentials({ access_token: accessToken });
-  const yt = google.youtube({ version: "v3", auth });
-  const res = await yt.channels.list({
-    part: ["id", "snippet", "statistics"],
-    mine: true,
+export async function listMyChannels(accessToken, refreshToken, onTokens) {
+  if (!accessToken && !refreshToken) throw new YouTubeAuthError();
+
+  const auth = createOAuthClient();
+  auth.setCredentials({
+    access_token: accessToken,
+    refresh_token: refreshToken,
   });
+
+  if (refreshToken) await refreshAccessToken(auth, onTokens);
+
+  let res;
+  try {
+    const yt = google.youtube({ version: "v3", auth });
+    res = await yt.channels.list({
+      part: ["id", "snippet", "statistics"],
+      mine: true,
+    });
+  } catch (error) {
+    if (isGoogleAuthError(error)) throw new YouTubeAuthError();
+    throw error;
+  }
+
   return (res.data.items || []).map((c) => ({
     channelId: c.id,
     title: c.snippet.title,

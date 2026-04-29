@@ -1,9 +1,39 @@
 import { Router } from "express";
+import { isAddress } from "ethers";
 import { requireAuth } from "../middleware/auth.js";
-import { listMyChannels, getPublicMetrics } from "../services/youtube.js";
+import {
+  YouTubeAuthError,
+  listMyChannels,
+  getPublicMetrics,
+} from "../services/youtube.js";
 import { computePrice } from "../services/pricing.js";
 
 const router = Router();
+
+async function saveYouTubeTokens(user, credentials) {
+  let changed = false;
+  if (credentials.access_token && credentials.access_token !== user.ytAccessToken) {
+    user.ytAccessToken = credentials.access_token;
+    changed = true;
+  }
+  if (credentials.refresh_token && credentials.refresh_token !== user.ytRefreshToken) {
+    user.ytRefreshToken = credentials.refresh_token;
+    changed = true;
+  }
+  if (changed) await user.save();
+}
+
+function handleYouTubeAuthError(error, res) {
+  if (error instanceof YouTubeAuthError || error?.code === "YOUTUBE_REAUTH_REQUIRED") {
+    return res.status(401).json({
+      error: "youtube reauth required",
+      authUrl: "/auth/google",
+    });
+  }
+
+  console.error(error);
+  return res.status(500).json({ error: "youtube api failed" });
+}
 
 /**
  * Called from the creator dashboard AFTER Google OAuth login.
@@ -11,14 +41,20 @@ const router = Router();
  */
 router.get("/mine", requireAuth, async (req, res) => {
   try {
-    if (!req.user.ytAccessToken) {
-      return res.status(400).json({ error: "re-auth with YouTube scope" });
+    if (!req.user.ytAccessToken && !req.user.ytRefreshToken) {
+      return res.status(401).json({
+        error: "youtube reauth required",
+        authUrl: "/auth/google",
+      });
     }
-    const channels = await listMyChannels(req.user.ytAccessToken);
+    const channels = await listMyChannels(
+      req.user.ytAccessToken,
+      req.user.ytRefreshToken,
+      (credentials) => saveYouTubeTokens(req.user, credentials)
+    );
     res.json({ channels });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "youtube api failed" });
+    handleYouTubeAuthError(e, res);
   }
 });
 
@@ -28,26 +64,34 @@ router.get("/mine", requireAuth, async (req, res) => {
  * claim the frontend can show when calling ChannelToken.mint on-chain.
  */
 router.post("/verify", requireAuth, async (req, res) => {
-  const { channelId, wallet } = req.body;
-  if (!channelId || !wallet) return res.status(400).json({ error: "missing" });
+  try {
+    const { channelId, wallet } = req.body;
+    if (!channelId || !wallet) return res.status(400).json({ error: "missing" });
 
-  const mine = await listMyChannels(req.user.ytAccessToken);
-  const match = mine.find((c) => c.channelId === channelId);
-  if (!match) return res.status(403).json({ error: "not your channel" });
+    const mine = await listMyChannels(
+      req.user.ytAccessToken,
+      req.user.ytRefreshToken,
+      (credentials) => saveYouTubeTokens(req.user, credentials)
+    );
+    const match = mine.find((c) => c.channelId === channelId);
+    if (!match) return res.status(403).json({ error: "not your channel" });
 
-  // bind wallet + save channel
-  req.user.wallet = wallet.toLowerCase();
-  const already = req.user.verifiedChannels.find((c) => c.channelId === channelId);
-  if (!already) {
-    req.user.verifiedChannels.push({
-      channelId,
-      title: match.title,
-      thumbnail: match.thumbnail,
-    });
+    // bind wallet + save channel
+    req.user.wallet = wallet.toLowerCase();
+    const already = req.user.verifiedChannels.find((c) => c.channelId === channelId);
+    if (!already) {
+      req.user.verifiedChannels.push({
+        channelId,
+        title: match.title,
+        thumbnail: match.thumbnail,
+      });
+    }
+    await req.user.save();
+
+    res.json({ ok: true, channel: match });
+  } catch (e) {
+    handleYouTubeAuthError(e, res);
   }
-  await req.user.save();
-
-  res.json({ ok: true, channel: match });
 });
 
 /**
@@ -56,6 +100,9 @@ router.post("/verify", requireAuth, async (req, res) => {
 router.post("/:channelId/token-contract", requireAuth, async (req, res) => {
   const { channelId } = req.params;
   const { address } = req.body;
+  if (!isAddress(address)) {
+    return res.status(400).json({ error: "invalid token contract address" });
+  }
   const ch = req.user.verifiedChannels.find((c) => c.channelId === channelId);
   if (!ch) return res.status(404).json({ error: "no such channel" });
   ch.tokenContract = address;

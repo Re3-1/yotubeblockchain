@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
     displayName: String,
     wallet: String,                  // their MetaMask address (lowercased)
     ytAccessToken: String,           // last OAuth access token
+    ytRefreshToken: String,
     verifiedChannels: [
       {
         channelId: String,           // "UCxxxxxxxx"
